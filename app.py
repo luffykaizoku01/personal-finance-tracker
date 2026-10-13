@@ -253,7 +253,143 @@ def refresh_all():
 # ---------- USER INTERFACE ----------
 init_db()
 
-with gr.Blocks(title="Personal Finance Tracker") as app:
+
+finance_css = """
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.gradio-container {
+    max-width: 1200px !important;
+    margin: auto !important;
+    font-family: 'Inter', sans-serif !important;
+    background: #f5f7fc !important;
+}
+
+.gradio-container .main {
+    background: #f5f7fc !important;
+}
+
+#finance-header {
+    background: linear-gradient(120deg, #111a3b, #4436a8);
+    padding: 30px;
+    border-radius: 22px;
+    color: white;
+    margin-bottom: 22px;
+    box-shadow: 0 12px 30px rgba(39, 42, 100, 0.18);
+}
+
+#finance-header h1 {
+    color: white !important;
+    font-size: 30px !important;
+    font-weight: 800 !important;
+    margin-bottom: 8px;
+}
+
+#finance-header p {
+    color: #e0e7ff !important;
+    font-size: 14px;
+}
+
+#summary-cards {
+    gap: 16px;
+    margin: 18px 0;
+}
+
+.metric-card {
+    background: white;
+    border: 1px solid #e7eaf4;
+    border-radius: 18px;
+    padding: 20px !important;
+    box-shadow: 0 5px 18px rgba(30, 41, 80, 0.05);
+}
+
+.metric-card label {
+    color: #667085 !important;
+    font-weight: 600 !important;
+}
+
+.metric-card input {
+    font-size: 25px !important;
+    font-weight: 800 !important;
+    color: #202b55 !important;
+    background: transparent !important;
+    border: none !important;
+    padding-left: 0 !important;
+}
+
+.tabs {
+    border: none !important;
+}
+
+.tab-nav {
+    gap: 8px !important;
+    border-bottom: 1px solid #e1e6f0 !important;
+    margin-bottom: 20px !important;
+}
+
+.tab-nav button {
+    border-radius: 12px 12px 0 0 !important;
+    font-weight: 600 !important;
+    padding: 13px 18px !important;
+}
+
+button.primary {
+    background: linear-gradient(120deg, #5546d7, #7967f8) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    color: white !important;
+    font-weight: 700 !important;
+    min-height: 45px;
+}
+
+button.primary:hover {
+    filter: brightness(1.06);
+}
+
+button {
+    border-radius: 10px !important;
+}
+
+input, textarea, select {
+    border-radius: 10px !important;
+}
+
+.block {
+    border-radius: 16px !important;
+}
+
+.dataframe {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+
+footer {
+    visibility: hidden;
+}
+
+@media (max-width: 700px) {
+    .gradio-container {
+        padding: 12px !important;
+    }
+
+    #finance-header {
+        padding: 22px;
+    }
+
+    #finance-header h1 {
+        font-size: 23px !important;
+    }
+}
+"""
+
+with gr.Blocks(
+    title="Personal Finance Tracker",
+    theme=gr.themes.Soft(
+        primary_hue="indigo",
+        secondary_hue="slate",
+        neutral_hue="slate"
+    ),
+    css=finance_css
+) as app:
     gr.Markdown("""
     # 💰 Personal Finance & Daily Expense Tracker
 
