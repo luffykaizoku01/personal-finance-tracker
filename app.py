@@ -57,24 +57,40 @@ def get_budgets():
     return df
 
 
-# ---------- DASHBOARD ----------
+# ---------- DASHBOARD ----------   
 def dashboard():
     df = get_transactions()
     today = date.today()
     month = today.strftime("%Y-%m")
 
     if df.empty:
-        return (
-            0.0, 0.0, 0.0,
-            "No transactions recorded yet.",
-            df
-        )
+        return 0.0, 0.0, 0.0, (
+            f"### Monthly Summary ({today.strftime('%B %Y')})\n"
+            "- **Income:** ₹0.00\n"
+            "- **Expenses:** ₹0.00\n"
+            "- **Balance:** ₹0.00"
+        ), df
 
-    df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0)
-    df["txn_date"] = df["txn_date"].astype(str)
-    df["txn_type"] = df["txn_type"].astype(str).str.strip().str.lower()
+    df["amount"] = pd.to_numeric(
+        df["amount"], errors="coerce"
+    ).fillna(0)
 
-    monthly = df[df["txn_date"].str.startswith(month)]
+    def normalize_date(value):
+        try:
+            if isinstance(value, (int, float)):
+                return datetime.fromtimestamp(
+                    float(value)
+                ).strftime("%Y-%m-%d")
+            return pd.to_datetime(value).strftime("%Y-%m-%d")
+        except (ValueError, TypeError, OSError, OverflowError):
+            return ""
+
+    df["normalized_date"] = df["txn_date"].apply(normalize_date)
+    df["txn_type"] = (
+        df["txn_type"].astype(str).str.strip().str.lower()
+    )
+
+    monthly = df[df["normalized_date"].str.startswith(month)]
 
     income = monthly.loc[
         monthly["txn_type"] == "income", "amount"
@@ -94,7 +110,6 @@ def dashboard():
     )
 
     return float(income), float(expenses), float(balance), summary, df
-
 
 # ---------- ADD TRANSACTION ----------
 def add_transaction(txn_date, txn_type, category, amount, description):
