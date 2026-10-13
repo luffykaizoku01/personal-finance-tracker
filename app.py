@@ -58,58 +58,55 @@ def get_budgets():
 
 
 # ---------- DASHBOARD ----------   
+
 def dashboard():
     df = get_transactions()
-    today = date.today()
-    month = today.strftime("%Y-%m")
+    current_month = date.today().strftime("%Y-%m")
 
     if df.empty:
-        return 0.0, 0.0, 0.0, (
-            f"### Monthly Summary ({today.strftime('%B %Y')})\n"
+        summary = (
+            f"### Monthly Summary ({date.today():%B %Y})\n"
             "- **Income:** ₹0.00\n"
             "- **Expenses:** ₹0.00\n"
             "- **Balance:** ₹0.00"
-        ), df
+        )
+        return 0.0, 0.0, 0.0, summary, df
 
-    df["amount"] = pd.to_numeric(
-        df["amount"], errors="coerce"
-    ).fillna(0)
+    df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0)
+    df["txn_type"] = df["txn_type"].astype(str).str.strip().str.lower()
 
-    def normalize_date(value):
+    def fix_date(value):
         try:
-            if isinstance(value, (int, float)):
-                return datetime.fromtimestamp(
-                    float(value)
-                ).strftime("%Y-%m-%d")
+            number = float(value)
+            # Unix timestamps may be in seconds or milliseconds
+            if number > 1e12:
+                number /= 1000
+            if number > 1e9:
+                return datetime.fromtimestamp(number).strftime("%Y-%m-%d")
+        except (ValueError, TypeError, OverflowError, OSError):
+            pass
+
+        try:
             return pd.to_datetime(value).strftime("%Y-%m-%d")
-        except (ValueError, TypeError, OSError, OverflowError):
+        except (ValueError, TypeError):
             return ""
 
-    df["normalized_date"] = df["txn_date"].apply(normalize_date)
-    df["txn_type"] = (
-        df["txn_type"].astype(str).str.strip().str.lower()
-    )
+    df["fixed_date"] = df["txn_date"].apply(fix_date)
+    monthly = df[df["fixed_date"].str.startswith(current_month)]
 
-    monthly = df[df["normalized_date"].str.startswith(month)]
-
-    income = monthly.loc[
-        monthly["txn_type"] == "income", "amount"
-    ].sum()
-
-    expenses = monthly.loc[
-        monthly["txn_type"] == "expense", "amount"
-    ].sum()
-
+    income = monthly.loc[monthly["txn_type"] == "income", "amount"].sum()
+    expenses = monthly.loc[monthly["txn_type"] == "expense", "amount"].sum()
     balance = income - expenses
 
     summary = (
-        f"### Monthly Summary ({today.strftime('%B %Y')})\n"
+        f"### Monthly Summary ({date.today():%B %Y})\n"
         f"- **Income:** ₹{income:,.2f}\n"
         f"- **Expenses:** ₹{expenses:,.2f}\n"
         f"- **Balance:** ₹{balance:,.2f}"
     )
 
     return float(income), float(expenses), float(balance), summary, df
+
 
 # ---------- ADD TRANSACTION ----------
 def add_transaction(txn_date, txn_type, category, amount, description):
